@@ -31,7 +31,7 @@ const userSchema = new Schema<TUser, UserModel>(
       enum: ["active", "blocked"],
       default: "active",
     },
-    isVarified: {
+    isVerified: {
       type: Boolean,
       default: false,
     },

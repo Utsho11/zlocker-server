@@ -8,7 +8,7 @@ export interface TUser {
   passwordChangedAt?: Date;
   role?: "superAdmin" | "basic";
   status?: "active" | "blocked";
-  isVarified: boolean;
+  isVerified: boolean;
   isDeleted: boolean;
 }
 
