@@ -45,11 +45,23 @@ router.post(
   AuthControllers.requestEmailVarification
 );
 
-// router.post(
-//   "/forget-password",
-//   validateRequest(AuthValidation.forgetPasswordValidationSchema),
-//   AuthControllers.forgetPassword
-// );
+router.post(
+  "/forget-password",
+  validateRequest(AuthValidation.forgetPasswordValidationSchema),
+  AuthControllers.forgetPassword
+);
+
+router.post(
+  "/refresh-token",
+  validateRequest(AuthValidation.refreshTokenValidationSchema),
+  AuthControllers.refreshToken
+);
+
+router.post(
+  "/getMe",
+  auth(USER_ROLE.superAdmin, USER_ROLE.basic),
+  AuthControllers.getMe
+);
 
 // router.post(
 //   "/reset-password",

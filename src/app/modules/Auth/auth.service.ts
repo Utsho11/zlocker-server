@@ -5,7 +5,11 @@ import config from "../../config";
 import AppError from "../../errors/AppError";
 import { User } from "../User/user.model";
 import { TLoginUser } from "./auth.interface";
-import { createToken, generateUnique6DigitCode } from "./auth.utils";
+import {
+  createToken,
+  generateUnique6DigitCode,
+  verifyToken,
+} from "./auth.utils";
 import { Request } from "express";
 import { sendEmail } from "../../utils/sendEmail";
 import { VerificationCode } from "./varification.model";
@@ -38,7 +42,7 @@ const loginUser = async (payload: TLoginUser) => {
   //checking if the password is correct
 
   if (!(await User.isPasswordMatched(payload?.password, user?.password)))
-    throw new AppError(httpStatus.FORBIDDEN, "Password do not matched");
+    throw new AppError(httpStatus.FORBIDDEN, "Password does not matched");
 
   //create token and sent to the  client
 
@@ -232,44 +236,149 @@ const verifyCode = async (code: string, email: string) => {
   }
 };
 
-// const forgetPassword = async (userId: string) => {
-//   // checking if the user is exist
-//   const user = await User.isUserExistsByCustomId(userId);
+const forgetPassword = async (email: string) => {
+  // checking if the user is exist
+  const user = await User.isUserExistsByEmail(email);
 
-//   if (!user) {
-//     throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");
-//   }
-//   // checking if the user is already deleted
-//   const isDeleted = user?.isDeleted;
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");
+  }
+  // checking if the user is already deleted
+  const isDeleted = user?.isDeleted;
 
-//   if (isDeleted) {
-//     throw new AppError(httpStatus.FORBIDDEN, "This user is deleted !");
-//   }
+  if (isDeleted) {
+    throw new AppError(httpStatus.FORBIDDEN, "This user is deleted !");
+  }
 
-//   // checking if the user is blocked
-//   const userStatus = user?.status;
+  // checking if the user is blocked
+  const userStatus = user?.status;
 
-//   if (userStatus === "blocked") {
-//     throw new AppError(httpStatus.FORBIDDEN, "This user is blocked ! !");
-//   }
+  if (userStatus === "blocked") {
+    throw new AppError(httpStatus.FORBIDDEN, "This user is blocked ! !");
+  }
 
-//   const jwtPayload = {
-//     userId: user.id,
-//     role: user.role,
-//   };
+  const jwtPayload = {
+    username: user.username,
+    email: user.email,
+    role: user.role as string,
+  };
 
-//   const resetToken = createToken(
-//     jwtPayload,
-//     config.jwt_access_secret as string,
-//     "10m"
-//   );
+  const resetToken = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    300
+  );
 
-//   const resetUILink = `${config.reset_pass_ui_link}?id=${user.id}&token=${resetToken} `;
+  const resetUILink = `${config.reset_pass_ui_link}?email=${user.email}&token=${resetToken} `;
 
-//   sendEmail(user.email, resetUILink);
+  const subject = "Reset Your Password";
+  const text = `Here's your reset password link: ${resetUILink}`;
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Reset Your Password</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+    <h2 style="color: #333;">Reset Your Password</h2>
+    <p>Hi ${user.username},</p>
+    <p>We received a request to reset your password. Click the button below to choose a new one:</p>
+    <p style="text-align: center;">
+      <a href="${resetUILink}" style="display: inline-block; padding: 12px 20px; color: white; background-color: #007bff; text-decoration: none; border-radius: 5px;">Reset Password</a>
+    </p>
+    <p>If you didn't request this, you can safely ignore this email.</p>
+    <p>Thanks,<br>zLocker Team</p>
+  </div>
+</body>
+</html>
+`;
 
-//   // console.log(resetUILink);
-// };
+  await sendEmail(email, subject, text, html);
+
+  return null;
+};
+
+const refreshToken = async (token: string) => {
+  // checking if the given token is valid
+  const decoded = verifyToken(token, config.jwt_refresh_secret as string);
+
+  const { username, email, iat } = decoded;
+
+  // checking if the user is exist
+  const user =
+    (await User.isUserExistsByEmail(email)) ||
+    (await User.isUserExistsByUserName(username));
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");
+  }
+  // checking if the user is already deleted
+  const isDeleted = user?.isDeleted;
+
+  if (isDeleted) {
+    throw new AppError(httpStatus.FORBIDDEN, "This user is deleted !");
+  }
+
+  // checking if the user is blocked
+  const userStatus = user?.status;
+
+  if (userStatus === "blocked") {
+    throw new AppError(httpStatus.FORBIDDEN, "This user is blocked ! !");
+  }
+
+  if (
+    user.passwordChangedAt &&
+    User.isJWTIssuedBeforePasswordChanged(user.passwordChangedAt, iat as number)
+  ) {
+    throw new AppError(httpStatus.UNAUTHORIZED, "You are not authorized !");
+  }
+
+  const jwtPayload = {
+    username: user?.username,
+    email: user?.email,
+    role: user.role as string,
+  };
+
+  const accessToken = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    24 * 3600
+  );
+
+  return {
+    accessToken,
+  };
+};
+
+const getMe = async (req: Request) => {
+  const { username, email } = req.user;
+
+  const user =
+    (await User.isUserExistsByEmail(email)) ||
+    (await User.isUserExistsByUserName(username));
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");
+  }
+  // checking if the user is already deleted
+
+  const isDeleted = user?.isDeleted;
+
+  if (isDeleted) {
+    throw new AppError(httpStatus.FORBIDDEN, "This user is deleted !");
+  }
+
+  // checking if the user is blocked
+
+  const userStatus = user?.status;
+
+  if (userStatus === "blocked") {
+    throw new AppError(httpStatus.FORBIDDEN, "This user is blocked ! !");
+  }
+
+  return user;
+};
 
 // const resetPassword = async (
 //   payload: { id: string; newPassword: string },
@@ -333,6 +442,8 @@ export const AuthServices = {
   addUsername,
   addEmail,
   verifyCode,
-  // forgetPassword,
+  forgetPassword,
+  refreshToken,
+  getMe,
   // resetPassword,
 };

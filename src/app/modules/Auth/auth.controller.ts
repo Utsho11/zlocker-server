@@ -84,16 +84,41 @@ const verifyCode = catchAsync(async (req, res) => {
   });
 });
 
-// const forgetPassword = catchAsync(async (req, res) => {
-//   const userId = req.body.id;
-//   const result = await AuthServices.forgetPassword(userId);
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Reset link is generated succesfully!",
-//     data: result,
-//   });
-// });
+const forgetPassword = catchAsync(async (req, res) => {
+  const { email } = req.body;
+
+  const result = await AuthServices.forgetPassword(email);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Reset link is generated succesfully!",
+    data: result,
+  });
+});
+
+const refreshToken = catchAsync(async (req, res) => {
+  const { refreshToken } = req.cookies;
+  const result = await AuthServices.refreshToken(refreshToken);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Access token is retrieved succesfully!",
+    data: result,
+  });
+});
+
+const getMe = catchAsync(async (req, res) => {
+  const result = await AuthServices.getMe(req);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "User is retrieved succesfully",
+    data: result,
+  });
+});
+
 // const resetPassword = catchAsync(async (req, res) => {
 //   const token = req.headers.authorization;
 
@@ -117,4 +142,7 @@ export const AuthControllers = {
   addUsername,
   addEmail,
   verifyCode,
+  forgetPassword,
+  refreshToken,
+  getMe,
 };
