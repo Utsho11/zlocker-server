@@ -3,6 +3,7 @@ import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { AuthServices } from "./auth.service";
+import AppError from "../../errors/AppError";
 
 const loginUser = catchAsync(async (req, res) => {
   const result = await AuthServices.loginUser(req.body);
@@ -119,21 +120,21 @@ const getMe = catchAsync(async (req, res) => {
   });
 });
 
-// const resetPassword = catchAsync(async (req, res) => {
-//   const token = req.headers.authorization;
+const resetPassword = catchAsync(async (req, res) => {
+  const token = req.headers.authorization;
 
-//   if (!token) {
-//     throw new AppError(httpStatus.BAD_REQUEST, "Something went wrong !");
-//   }
+  if (!token) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Something went wrong !");
+  }
 
-//   const result = await AuthServices.resetPassword(req.body, token);
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: "Password reset succesfully!",
-//     data: result,
-//   });
-// });
+  const result = await AuthServices.resetPassword(req.body, token);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Password reset succesfully!",
+    data: result,
+  });
+});
 
 export const AuthControllers = {
   loginUser,
@@ -145,4 +146,5 @@ export const AuthControllers = {
   forgetPassword,
   refreshToken,
   getMe,
+  resetPassword,
 };
