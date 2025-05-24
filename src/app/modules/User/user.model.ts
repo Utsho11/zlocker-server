@@ -23,8 +23,8 @@ const userSchema = new Schema<TUser, UserModel>(
     },
     role: {
       type: String,
-      enum: ["basic", "superAdmin"],
-      default: "basic",
+      enum: ["user", "superAdmin", "premiumUser"],
+      default: "user",
     },
     status: {
       type: String,
@@ -48,6 +48,7 @@ const userSchema = new Schema<TUser, UserModel>(
 userSchema.pre("save", async function (next) {
   // eslint-disable-next-line @typescript-eslint/no-this-alias
   const user = this; // doc
+  if (!user.isModified("password")) return next();
   // hashing password and save into DB
   user.password = await bcrypt.hash(
     user.password,
@@ -64,10 +65,6 @@ userSchema.post("save", function (doc, next) {
 
 userSchema.statics.isUserExistsByEmail = async function (email: string) {
   return await User.findOne({ email }).select("+password");
-};
-
-userSchema.statics.isUserExistsByUserName = async function (username: string) {
-  return await User.findOne({ username }).select("+password");
 };
 
 userSchema.statics.isPasswordMatched = async function (

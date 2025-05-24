@@ -13,12 +13,11 @@ import {
 import { Request } from "express";
 import { sendEmail } from "../../utils/sendEmail";
 import { VerificationCode } from "./varification.model";
+import { UserTemp } from "../User/user.temp.model";
 
 const loginUser = async (payload: TLoginUser) => {
   // checking if the user is exist
-  const user =
-    (await User.isUserExistsByEmail(payload.emailORusername)) ||
-    (await User.isUserExistsByUserName(payload.emailORusername));
+  const user = await User.isUserExistsByEmail(payload.email);
 
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");
@@ -58,8 +57,15 @@ const loginUser = async (payload: TLoginUser) => {
     24 * 3600
   );
 
+  const refreshToken = createToken(
+    jwtPayload,
+    config.jwt_refresh_secret as string,
+    1 * 24 * 3600
+  );
+
   return {
     accessToken,
+    refreshToken,
   };
 };
 
@@ -70,9 +76,7 @@ const changePassword = async (
   // console.log({ userData });
 
   // checking if the user is exist
-  const user =
-    (await User.isUserExistsByEmail(userData.email)) ||
-    (await User.isUserExistsByUserName(userData.username));
+  const user = await User.isUserExistsByEmail(userData.email);
 
   // console.log({ user });
 
@@ -169,14 +173,6 @@ const requestEmailVarification = async (req: Request) => {
 };
 
 const addUsername = async (email: string, username: string) => {
-  const isUsernameExists = await User.isUserExistsByUserName(username);
-  if (isUsernameExists) {
-    throw new AppError(
-      409,
-      "This username has been taken already! Please, try an unique one."
-    );
-  }
-
   await User.findOneAndUpdate(
     {
       email,
@@ -211,28 +207,72 @@ const addEmail = async (email: string, username: string) => {
 };
 
 const verifyCode = async (code: string, email: string) => {
-  const isCodeAvailable = await VerificationCode.findOne({ email });
+  // Start a MongoDB session
 
-  if (!isCodeAvailable) {
-    throw new AppError(404, "Code not available for this email!");
-  }
-  if (code !== isCodeAvailable.code) {
-    throw new AppError(404, "Code is not matched!");
-  }
   try {
-    await User.findOneAndUpdate(
-      {
-        email,
-      },
-      {
-        isVerified: true,
-      }
+    // Find the verification code
+    const isCodeAvailable = await VerificationCode.findOne({
+      code,
+      email,
+    });
+
+    if (!isCodeAvailable) {
+      throw new AppError(404, "Code is not available for this email!");
+    }
+
+    if (code !== isCodeAvailable.code) {
+      throw new AppError(400, "Code does not match!");
+    }
+
+    // Find the temporary user
+    const userTemp = await UserTemp.findOne({
+      email,
+    });
+    if (!userTemp) {
+      throw new AppError(404, "Temporary user not found!");
+    }
+
+    // Create a new user in the User collection
+    const newUser = await User.create({
+      email: userTemp.email,
+      password: userTemp.password,
+      isVerified: true,
+      createdAt: new Date(),
+    });
+
+    // Delete the temporary user and verification code
+    await UserTemp.deleteOne({ email: userTemp.email });
+    await VerificationCode.deleteOne({ code, email });
+
+    const jwtPayload = {
+      username: newUser?.username,
+      email: newUser?.email,
+      role: newUser.role as string,
+    };
+
+    const accessToken = createToken(
+      jwtPayload,
+      config.jwt_access_secret as string,
+      24 * 3600
     );
 
-    return null;
-  } catch (error) {
-    console.log(error);
-    throw new AppError(500, "Internal Server Error");
+    const refreshToken = createToken(
+      jwtPayload,
+      config.jwt_refresh_secret as string,
+      1 * 24 * 3600
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    console.error("Error in verifyCode:", error);
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Internal Server Error"
+    );
   }
 };
 
@@ -303,12 +343,10 @@ const refreshToken = async (token: string) => {
   // checking if the given token is valid
   const decoded = verifyToken(token, config.jwt_refresh_secret as string);
 
-  const { username, email, iat } = decoded;
+  const { email, iat } = decoded;
 
   // checking if the user is exist
-  const user =
-    (await User.isUserExistsByEmail(email)) ||
-    (await User.isUserExistsByUserName(username));
+  const user = await User.isUserExistsByEmail(email);
 
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");
@@ -352,11 +390,9 @@ const refreshToken = async (token: string) => {
 };
 
 const getMe = async (req: Request) => {
-  const { username, email } = req.user;
+  const { email } = req.user;
 
-  const user =
-    (await User.isUserExistsByEmail(email)) ||
-    (await User.isUserExistsByUserName(username));
+  const user = await User.isUserExistsByEmail(email);
 
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");

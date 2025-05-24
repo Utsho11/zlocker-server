@@ -75,7 +75,9 @@ const addEmail = catchAsync(async (req, res) => {
 const verifyCode = catchAsync(async (req, res) => {
   // console.log(req.body);
 
-  const result = await AuthServices.verifyCode(req.body.code, req.user.email);
+  const { code, email } = req.body;
+
+  const result = await AuthServices.verifyCode(code, email);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

@@ -12,10 +12,19 @@ export const sendEmail = async (
     port: 587,
     secure: config.NODE_ENV === "production",
     auth: {
-      // TODO: replace `user` and `pass` values from <https://forwardemail.net>
       user: "zlocker2025@gmail.com",
-      pass: "ivfk xnct jfdx axsp",
+      pass: "djis dpit gqsd rdsn",
     },
+  });
+
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error("Verification failed:", error);
+    } else {
+      console.log(success);
+
+      console.log("SMTP connection verified successfully");
+    }
   });
 
   await transporter.sendMail({

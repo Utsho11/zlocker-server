@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const loginValidationSchema = z.object({
   body: z.object({
-    emailORusername: z.string({
+    email: z.string({
       required_error: "Email or Username is required.",
     }),
     password: z.string({ required_error: "Password is required" }),

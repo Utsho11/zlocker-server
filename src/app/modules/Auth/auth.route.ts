@@ -15,32 +15,28 @@ router.post(
 
 router.put(
   "/change-password",
-  auth(USER_ROLE.superAdmin, USER_ROLE.basic),
+  auth(USER_ROLE.superAdmin, USER_ROLE.user),
   validateRequest(AuthValidation.changePasswordValidationSchema),
   AuthControllers.changePassword
 );
 
 router.put(
   "/add-username",
-  auth(USER_ROLE.superAdmin, USER_ROLE.basic),
+  auth(USER_ROLE.superAdmin, USER_ROLE.user),
   AuthControllers.addUsername
 );
 
 router.put(
   "/add-email",
-  auth(USER_ROLE.superAdmin, USER_ROLE.basic),
+  auth(USER_ROLE.superAdmin, USER_ROLE.user),
   AuthControllers.addEmail
 );
 
-router.put(
-  "/verify-code",
-  auth(USER_ROLE.superAdmin, USER_ROLE.basic),
-  AuthControllers.verifyCode
-);
+router.post("/verify-code", AuthControllers.verifyCode);
 
 router.post(
   "/request/email-varification",
-  auth(USER_ROLE.superAdmin, USER_ROLE.basic),
+  auth(USER_ROLE.superAdmin, USER_ROLE.user),
   validateRequest(AuthValidation.emailValidationSchema),
   AuthControllers.requestEmailVarification
 );
@@ -59,7 +55,7 @@ router.post(
 
 router.post(
   "/getMe",
-  auth(USER_ROLE.superAdmin, USER_ROLE.basic),
+  auth(USER_ROLE.superAdmin, USER_ROLE.user, USER_ROLE.premiumUser),
   AuthControllers.getMe
 );
 
