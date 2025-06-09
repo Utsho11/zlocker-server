@@ -13,7 +13,6 @@ import {
 import { Request } from "express";
 import { sendEmail } from "../../utils/sendEmail";
 import { VerificationCode } from "./varification.model";
-import { UserTemp } from "../User/user.temp.model";
 
 const loginUser = async (payload: TLoginUser) => {
   // checking if the user is exist
@@ -46,9 +45,10 @@ const loginUser = async (payload: TLoginUser) => {
   //create token and sent to the  client
 
   const jwtPayload = {
-    username: user?.username,
+    username: user?.name,
     email: user?.email,
     role: user.role as string,
+    isVerified: user.isVerified,
   };
 
   const accessToken = createToken(
@@ -126,21 +126,19 @@ const changePassword = async (
   return null;
 };
 
-const requestEmailVarification = async (req: Request) => {
-  const { email } = req.body;
-
-  if (email !== req.user.email) {
-    throw new AppError(500, "Email is not matched!");
-  }
-
+const resendEmailVarificationCode = async (email: string) => {
   const userByEmail = await User.isUserExistsByEmail(email);
+
+  if (!userByEmail) {
+    throw new AppError(404, "This user is not found!");
+  }
 
   if (userByEmail && userByEmail?.isVerified) {
     throw new AppError(409, "This email has been verified already.");
   }
 
   const code = await generateUnique6DigitCode(email);
-  const subject = "zlocker verification code.";
+  const subject = "resend zlocker verification code.";
   const html = ` 
   <!DOCTYPE html>
   <html>
@@ -172,34 +170,13 @@ const requestEmailVarification = async (req: Request) => {
   return null;
 };
 
-const addUsername = async (email: string, username: string) => {
+const addUsername = async (email: string, name: string) => {
   await User.findOneAndUpdate(
     {
       email,
     },
     {
-      username,
-    }
-  );
-
-  return null;
-};
-
-const addEmail = async (email: string, username: string) => {
-  const isUsernameExists = await User.isUserExistsByEmail(email);
-  if (isUsernameExists) {
-    throw new AppError(
-      409,
-      "This email has been taken already! Please, try an unique one."
-    );
-  }
-
-  await User.findOneAndUpdate(
-    {
-      username,
-    },
-    {
-      email,
+      name,
     }
   );
 
@@ -207,8 +184,6 @@ const addEmail = async (email: string, username: string) => {
 };
 
 const verifyCode = async (code: string, email: string) => {
-  // Start a MongoDB session
-
   try {
     // Find the verification code
     const isCodeAvailable = await VerificationCode.findOne({
@@ -225,47 +200,24 @@ const verifyCode = async (code: string, email: string) => {
     }
 
     // Find the temporary user
-    const userTemp = await UserTemp.findOne({
-      email,
-    });
+    const userTemp = await User.findOneAndUpdate(
+      {
+        email,
+      },
+      {
+        isVerified: true,
+      }
+    );
+
     if (!userTemp) {
       throw new AppError(404, "Temporary user not found!");
     }
 
-    // Create a new user in the User collection
-    const newUser = await User.create({
-      email: userTemp.email,
-      password: userTemp.password,
-      isVerified: true,
-      createdAt: new Date(),
-    });
-
     // Delete the temporary user and verification code
-    await UserTemp.deleteOne({ email: userTemp.email });
+
     await VerificationCode.deleteOne({ code, email });
 
-    const jwtPayload = {
-      username: newUser?.username,
-      email: newUser?.email,
-      role: newUser.role as string,
-    };
-
-    const accessToken = createToken(
-      jwtPayload,
-      config.jwt_access_secret as string,
-      24 * 3600
-    );
-
-    const refreshToken = createToken(
-      jwtPayload,
-      config.jwt_refresh_secret as string,
-      1 * 24 * 3600
-    );
-
-    return {
-      accessToken,
-      refreshToken,
-    };
+    return null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("Error in verifyCode:", error);
@@ -298,7 +250,7 @@ const forgetPassword = async (email: string) => {
   }
 
   const jwtPayload = {
-    username: user.username,
+    username: user.name,
     email: user.email,
     role: user.role as string,
   };
@@ -322,7 +274,7 @@ const forgetPassword = async (email: string) => {
 <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
   <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
     <h2 style="color: #333;">Reset Your Password</h2>
-    <p>Hi ${user.username},</p>
+    <p>Hi ${user.name},</p>
     <p>We received a request to reset your password. Click the button below to choose a new one:</p>
     <p style="text-align: center;">
       <a href="${resetUILink}" style="display: inline-block; padding: 12px 20px; color: white; background-color: #007bff; text-decoration: none; border-radius: 5px;">Reset Password</a>
@@ -373,7 +325,7 @@ const refreshToken = async (token: string) => {
   }
 
   const jwtPayload = {
-    username: user?.username,
+    username: user?.name,
     email: user?.email,
     role: user.role as string,
   };
@@ -392,7 +344,7 @@ const refreshToken = async (token: string) => {
 const getMe = async (req: Request) => {
   const { email } = req.user;
 
-  const user = await User.isUserExistsByEmail(email);
+  const user = await User.findOne({ email });
 
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");
@@ -470,9 +422,8 @@ const resetPassword = async (
 export const AuthServices = {
   loginUser,
   changePassword,
-  requestEmailVarification,
+  resendEmailVarificationCode,
   addUsername,
-  addEmail,
   verifyCode,
   forgetPassword,
   refreshToken,

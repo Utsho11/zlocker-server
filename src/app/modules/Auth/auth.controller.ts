@@ -31,10 +31,12 @@ const changePassword = catchAsync(async (req, res) => {
   });
 });
 
-const requestEmailVarification = catchAsync(async (req, res) => {
+const resendVerificationCode = catchAsync(async (req, res) => {
   // console.log(req.body);
 
-  const result = await AuthServices.requestEmailVarification(req);
+  const { email } = req.body;
+
+  const result = await AuthServices.resendEmailVarificationCode(email);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -59,31 +61,18 @@ const addUsername = catchAsync(async (req, res) => {
   });
 });
 
-const addEmail = catchAsync(async (req, res) => {
-  // console.log(req.body);
-
-  const result = await AuthServices.addEmail(req.body.email, req.user.username);
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Email updated succesfully!",
-    data: result,
-  });
-});
-
 const verifyCode = catchAsync(async (req, res) => {
   // console.log(req.body);
 
   const { code, email } = req.body;
 
-  const result = await AuthServices.verifyCode(code, email);
+  await AuthServices.verifyCode(code, email);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Code verified succesfully!",
-    data: result,
+    data: "Verification successful",
   });
 });
 
@@ -141,9 +130,8 @@ const resetPassword = catchAsync(async (req, res) => {
 export const AuthControllers = {
   loginUser,
   changePassword,
-  requestEmailVarification,
+  resendVerificationCode,
   addUsername,
-  addEmail,
   verifyCode,
   forgetPassword,
   refreshToken,

@@ -4,7 +4,7 @@ import sendResponse from "../../utils/sendResponse";
 import { UserServices } from "./user.service";
 
 const createTempUser = catchAsync(async (req, res) => {
-  const result = await UserServices.createTempUserIntoDB(req.body);
+  const result = await UserServices.createUserIntoDB(req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

@@ -26,19 +26,12 @@ router.put(
   AuthControllers.addUsername
 );
 
-router.put(
-  "/add-email",
-  auth(USER_ROLE.superAdmin, USER_ROLE.user),
-  AuthControllers.addEmail
-);
-
 router.post("/verify-code", AuthControllers.verifyCode);
 
 router.post(
-  "/request/email-varification",
-  auth(USER_ROLE.superAdmin, USER_ROLE.user),
+  "/resend-email-varification-code",
   validateRequest(AuthValidation.emailValidationSchema),
-  AuthControllers.requestEmailVarification
+  AuthControllers.resendVerificationCode
 );
 
 router.post(
@@ -53,7 +46,7 @@ router.post(
   AuthControllers.refreshToken
 );
 
-router.post(
+router.get(
   "/getMe",
   auth(USER_ROLE.superAdmin, USER_ROLE.user, USER_ROLE.premiumUser),
   AuthControllers.getMe

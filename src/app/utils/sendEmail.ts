@@ -17,16 +17,6 @@ export const sendEmail = async (
     },
   });
 
-  transporter.verify((error, success) => {
-    if (error) {
-      console.error("Verification failed:", error);
-    } else {
-      console.log(success);
-
-      console.log("SMTP connection verified successfully");
-    }
-  });
-
   await transporter.sendMail({
     from: "zlocker", // sender address
     to,
