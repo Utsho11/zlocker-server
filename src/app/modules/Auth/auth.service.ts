@@ -16,6 +16,7 @@ import { VerificationCode } from "./varification.model";
 
 const loginUser = async (payload: TLoginUser) => {
   // checking if the user is exist
+
   const user = await User.isUserExistsByEmail(payload.email);
 
   if (!user) {
@@ -45,7 +46,7 @@ const loginUser = async (payload: TLoginUser) => {
   //create token and sent to the  client
 
   const jwtPayload = {
-    username: user?.name,
+    name: user?.name,
     email: user?.email,
     role: user.role as string,
     isVerified: user.isVerified,
@@ -57,15 +58,8 @@ const loginUser = async (payload: TLoginUser) => {
     24 * 3600
   );
 
-  const refreshToken = createToken(
-    jwtPayload,
-    config.jwt_refresh_secret as string,
-    1 * 24 * 3600
-  );
-
   return {
     accessToken,
-    refreshToken,
   };
 };
 
@@ -200,7 +194,7 @@ const verifyCode = async (code: string, email: string) => {
     }
 
     // Find the temporary user
-    const userTemp = await User.findOneAndUpdate(
+    const user = await User.findOneAndUpdate(
       {
         email,
       },
@@ -209,15 +203,28 @@ const verifyCode = async (code: string, email: string) => {
       }
     );
 
-    if (!userTemp) {
-      throw new AppError(404, "Temporary user not found!");
+    if (!user) {
+      throw new AppError(404, "User not found!");
     }
 
     // Delete the temporary user and verification code
 
     await VerificationCode.deleteOne({ code, email });
 
-    return null;
+    const jwtPayload = {
+      name: user?.name,
+      email: user?.email,
+      role: user.role as string,
+      isVerified: user.isVerified,
+    };
+
+    const accessToken = createToken(
+      jwtPayload,
+      config.jwt_access_secret as string,
+      24 * 3600
+    );
+
+    return { accessToken };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("Error in verifyCode:", error);
@@ -293,7 +300,7 @@ const forgetPassword = async (email: string) => {
 
 const refreshToken = async (token: string) => {
   // checking if the given token is valid
-  const decoded = verifyToken(token, config.jwt_refresh_secret as string);
+  const decoded = verifyToken(token, config.jwt_access_secret as string);
 
   const { email, iat } = decoded;
 

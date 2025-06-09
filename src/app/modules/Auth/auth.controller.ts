@@ -66,13 +66,13 @@ const verifyCode = catchAsync(async (req, res) => {
 
   const { code, email } = req.body;
 
-  await AuthServices.verifyCode(code, email);
+  const result = await AuthServices.verifyCode(code, email);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "Code verified succesfully!",
-    data: "Verification successful",
+    data: result,
   });
 });
 
