@@ -11,4 +11,28 @@ router.post(
   TextControllers.createContent
 );
 
+router.get(
+  "/get-all-content",
+  auth(USER_ROLE.user, USER_ROLE.superAdmin, USER_ROLE.premiumUser),
+  TextControllers.getAllContent
+);
+
+router.get(
+  "/get-content/:id",
+  auth(USER_ROLE.user, USER_ROLE.superAdmin, USER_ROLE.premiumUser),
+  TextControllers.getSingleContent
+);
+
+router.put(
+  "/update-content/:id",
+  auth(USER_ROLE.user, USER_ROLE.superAdmin, USER_ROLE.premiumUser),
+  TextControllers.updateContent
+);
+
+router.delete(
+  "/delete-content/:id",
+  auth(USER_ROLE.user, USER_ROLE.superAdmin, USER_ROLE.premiumUser),
+  TextControllers.deleteContent
+);
+
 export const TextRoutes = router;
