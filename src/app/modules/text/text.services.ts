@@ -1,7 +1,7 @@
 import { User } from "../User/user.model";
 import AppError from "../../errors/AppError";
 import { Text } from "./text.model";
-import { encrypt } from "../../utils";
+import { decrypt, encrypt } from "../../utils";
 
 const createContentIntoDB = async (payload: {
   content: string;
@@ -33,9 +33,14 @@ const createContentIntoDB = async (payload: {
 };
 
 const getAllContentFromDB = async (email: string) => {
-  const result = await Text.find({
+  const data = await Text.find({
     author: email,
   });
+
+  const result = data.map((doc) => ({
+    ...doc.toObject(), // convert Mongoose document to plain object
+    content: decrypt(doc.content),
+  }));
 
   // console.log(result);
 
@@ -49,8 +54,16 @@ const getContentById = async (id: string) => {
     throw new AppError(404, "ContentID is missing!");
   }
 
-  const result = await Text.findById(id);
+  const data = await Text.findById(id);
   // console.log(result);
+
+  let result;
+
+  if (data) {
+    const decryptedContent = decrypt(data.content);
+
+    result = { ...data.toObject(), content: decryptedContent };
+  }
 
   return result;
 };
