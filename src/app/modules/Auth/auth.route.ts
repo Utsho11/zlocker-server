@@ -20,7 +20,7 @@ router.put(
   AuthControllers.changePassword
 );
 
-router.put(
+router.post(
   "/add-username",
   auth(USER_ROLE.superAdmin, USER_ROLE.user),
   AuthControllers.addUsername

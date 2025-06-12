@@ -41,7 +41,7 @@ const loginUser = async (payload: TLoginUser) => {
   //checking if the password is correct
 
   if (!(await User.isPasswordMatched(payload?.password, user?.password)))
-    throw new AppError(httpStatus.FORBIDDEN, "Password does not matched");
+    throw new AppError(httpStatus.FORBIDDEN, "Credentials do not matched");
 
   //create token and sent to the  client
 
@@ -215,7 +215,7 @@ const verifyCode = async (code: string, email: string) => {
       name: user?.name,
       email: user?.email,
       role: user.role as string,
-      isVerified: user.isVerified,
+      isVerified: true,
     };
 
     const accessToken = createToken(
