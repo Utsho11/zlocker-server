@@ -13,7 +13,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://192.168.0.118:3000"],
+    origin: ["https://zlocker-kappa.vercel.app"],
     credentials: true,
   })
 );

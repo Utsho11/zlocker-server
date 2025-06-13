@@ -58,4 +58,6 @@ router.post(
   AuthControllers.resetPassword
 );
 
+router.post("/send-email", AuthControllers.sendMail);
+
 export const AuthRoutes = router;

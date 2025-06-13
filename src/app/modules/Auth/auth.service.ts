@@ -13,6 +13,7 @@ import {
 import { Request } from "express";
 import { sendEmail } from "../../utils/sendEmail";
 import { VerificationCode } from "./varification.model";
+import { sendEmailToDev } from "../../utils/sendEmailToDev";
 
 const loginUser = async (payload: TLoginUser) => {
   // checking if the user is exist
@@ -178,61 +179,48 @@ const addUsername = async (email: string, name: string) => {
 };
 
 const verifyCode = async (code: string, email: string) => {
-  try {
-    // Find the verification code
-    const isCodeAvailable = await VerificationCode.findOne({
-      code,
-      email,
-    });
+  // Find the verification code
+  const isCodeAvailable = await VerificationCode.findOne({
+    code,
+    email,
+  });
 
-    if (!isCodeAvailable) {
-      throw new AppError(404, "Code is not available for this email!");
-    }
-
-    if (code !== isCodeAvailable.code) {
-      throw new AppError(400, "Code does not match!");
-    }
-
-    // Find the temporary user
-    const user = await User.findOneAndUpdate(
-      {
-        email,
-      },
-      {
-        isVerified: true,
-      }
-    );
-
-    if (!user) {
-      throw new AppError(404, "User not found!");
-    }
-
-    // Delete the temporary user and verification code
-
-    await VerificationCode.deleteOne({ code, email });
-
-    const jwtPayload = {
-      name: user?.name,
-      email: user?.email,
-      role: user.role as string,
-      isVerified: true,
-    };
-
-    const accessToken = createToken(
-      jwtPayload,
-      config.jwt_access_secret as string,
-      24 * 3600
-    );
-
-    return { accessToken };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    console.error("Error in verifyCode:", error);
-    throw new AppError(
-      httpStatus.INTERNAL_SERVER_ERROR,
-      "Internal Server Error"
-    );
+  if (!isCodeAvailable) {
+    throw new AppError(404, "Code does not match!");
   }
+
+  // Find the temporary user
+  const user = await User.findOneAndUpdate(
+    {
+      email,
+    },
+    {
+      isVerified: true,
+    }
+  );
+
+  if (!user) {
+    throw new AppError(404, "User not found!");
+  }
+
+  // Delete the temporary user and verification code
+
+  await VerificationCode.deleteOne({ code, email });
+
+  const jwtPayload = {
+    name: user?.name,
+    email: user?.email,
+    role: user.role as string,
+    isVerified: true,
+  };
+
+  const accessToken = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    24 * 3600
+  );
+
+  return { accessToken };
 };
 
 const forgetPassword = async (email: string) => {
@@ -426,6 +414,12 @@ const resetPassword = async (
   );
 };
 
+const sendMailToDev = async (req: Request) => {
+  const { name, email: userEmail, message } = req.body;
+
+  await sendEmailToDev({ name, userEmail, message });
+};
+
 export const AuthServices = {
   loginUser,
   changePassword,
@@ -436,4 +430,5 @@ export const AuthServices = {
   refreshToken,
   getMe,
   resetPassword,
+  sendMailToDev,
 };
