@@ -89,6 +89,8 @@ const updateContent = async (id: string, content: string) => {
 };
 
 const deleteContent = async (id: string) => {
+  // console.log(id);
+
   if (!id) {
     throw new AppError(400, "Content ID is missing!");
   }

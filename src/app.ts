@@ -13,7 +13,8 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: ["https://zlocker-kappa.vercel.app"],
+    origin: "https://zlocker-five.vercel.app",
+    methods: ["GET", "POST", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
@@ -22,7 +23,7 @@ app.use(
 app.use("/api", router);
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("Hi Developer ! You are welcome to the server.");
+  res.send("Hi Developers ! You are welcome to the server.");
 });
 
 app.use(globalErrorHandler);

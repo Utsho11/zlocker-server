@@ -59,6 +59,7 @@ const updateContent = catchAsync(async (req, res) => {
 
 const deleteContent = catchAsync(async (req, res) => {
   const id = req.params.id;
+  console.log(id);
   // console.log("id", req.params.id);
 
   const result = await TextServices.deleteContent(id as string);

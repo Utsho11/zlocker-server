@@ -13,7 +13,7 @@ router.post(
   AuthControllers.loginUser
 );
 
-router.put(
+router.post(
   "/change-password",
   auth(USER_ROLE.superAdmin, USER_ROLE.user),
   validateRequest(AuthValidation.changePasswordValidationSchema),
@@ -59,5 +59,11 @@ router.post(
 );
 
 router.post("/send-email", AuthControllers.sendMail);
+
+router.post("/logout", (req, res) => {
+  res.clearCookie("accessToken");
+  res.clearCookie("refreshToken");
+  res.json({ message: "Logged out" });
+});
 
 export const AuthRoutes = router;

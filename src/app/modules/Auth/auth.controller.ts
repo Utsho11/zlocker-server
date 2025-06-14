@@ -7,15 +7,29 @@ import AppError from "../../errors/AppError";
 
 const loginUser = catchAsync(async (req, res) => {
   const result = await AuthServices.loginUser(req.body);
-  const { accessToken } = result;
+  const { accessToken, refreshToken, userInfo } = result;
+
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: true, // use in production
+    sameSite: "none",
+    domain: "zlocker-five.vercel.app",
+    maxAge: 3600 * 1000, // 1 hour in milliseconds
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+    domain: "zlocker-five.vercel.app",
+    maxAge: 365 * 24 * 3600 * 1000, // 1 year in milliseconds
+  });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "User is logged in succesfully!",
-    data: {
-      accessToken,
-    },
+    data: userInfo,
   });
 });
 

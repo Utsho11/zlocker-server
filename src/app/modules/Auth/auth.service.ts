@@ -20,12 +20,12 @@ const loginUser = async (payload: TLoginUser) => {
 
   const user = await User.isUserExistsByEmail(payload.email);
 
+  const { email, isVerified, isDeleted, status } = user;
+
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "This user is not found !");
   }
   // checking if the user is already deleted
-
-  const isDeleted = user?.isDeleted;
 
   if (isDeleted) {
     throw new AppError(httpStatus.FORBIDDEN, "This user is deleted !");
@@ -33,9 +33,7 @@ const loginUser = async (payload: TLoginUser) => {
 
   // checking if the user is blocked
 
-  const userStatus = user?.status;
-
-  if (userStatus === "blocked") {
+  if (status === "blocked") {
     throw new AppError(httpStatus.FORBIDDEN, "This user is blocked ! !");
   }
 
@@ -56,11 +54,24 @@ const loginUser = async (payload: TLoginUser) => {
   const accessToken = createToken(
     jwtPayload,
     config.jwt_access_secret as string,
-    24 * 3600
+    3600
   );
+
+  const refreshToken = createToken(
+    jwtPayload,
+    config.jwt_access_secret as string,
+    365 * 24 * 3600
+  );
+
+  const userInfo = {
+    email,
+    isVerified,
+  };
 
   return {
     accessToken,
+    refreshToken,
+    userInfo,
   };
 };
 
@@ -207,20 +218,14 @@ const verifyCode = async (code: string, email: string) => {
 
   await VerificationCode.deleteOne({ code, email });
 
-  const jwtPayload = {
+  const payload = {
     name: user?.name,
     email: user?.email,
     role: user.role as string,
     isVerified: true,
   };
 
-  const accessToken = createToken(
-    jwtPayload,
-    config.jwt_access_secret as string,
-    24 * 3600
-  );
-
-  return { accessToken };
+  return payload;
 };
 
 const forgetPassword = async (email: string) => {
