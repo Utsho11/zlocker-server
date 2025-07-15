@@ -2,9 +2,11 @@ import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import httpStatus from "http-status";
 import { ImageServices } from "./image.services";
+import { getUserEmail } from "../../utils/getUserEmail";
 
 const stroreImage = catchAsync(async (req, res) => {
-  const email = req.user?.email;
+  const email = await getUserEmail(req);
+
   const result = await ImageServices.storeImageIntoDB(email, req);
 
   sendResponse(res, {
@@ -16,7 +18,7 @@ const stroreImage = catchAsync(async (req, res) => {
 });
 
 const getAllImage = catchAsync(async (req, res) => {
-  const email = req.user?.email;
+  const email = await getUserEmail(req);
   const result = await ImageServices.getAllImageFromDB(email);
 
   sendResponse(res, {
@@ -29,7 +31,8 @@ const getAllImage = catchAsync(async (req, res) => {
 
 const deleteImage = catchAsync(async (req, res) => {
   const id = req.params?.id;
-  const result = await ImageServices.deleteImagefromDB(id);
+  const email = await getUserEmail(req);
+  const result = await ImageServices.deleteImagefromDB(id, email);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

@@ -1,11 +1,13 @@
 import catchAsync from "../../utils/catchAsync";
+import { getUserEmail } from "../../utils/getUserEmail";
 import sendResponse from "../../utils/sendResponse";
 import { TextServices } from "./text.services";
 import httpStatus from "http-status";
 
 const createContent = catchAsync(async (req, res) => {
   const { content } = req.body;
-  const email = req.user?.email;
+  const email = await getUserEmail(req);
+
   const result = await TextServices.createContentIntoDB({ content, email });
 
   sendResponse(res, {
@@ -17,7 +19,7 @@ const createContent = catchAsync(async (req, res) => {
 });
 
 const getAllContent = catchAsync(async (req, res) => {
-  const email = req.user?.email;
+  const email = await getUserEmail(req);
   const result = await TextServices.getAllContentFromDB(email);
 
   sendResponse(res, {
@@ -59,7 +61,7 @@ const updateContent = catchAsync(async (req, res) => {
 
 const deleteContent = catchAsync(async (req, res) => {
   const id = req.params.id;
-  console.log(id);
+  // console.log(id);
   // console.log("id", req.params.id);
 
   const result = await TextServices.deleteContent(id as string);

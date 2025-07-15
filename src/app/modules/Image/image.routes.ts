@@ -1,27 +1,19 @@
 import express from "express";
-import auth from "../../middlewares/auth";
 import { fileUploader } from "../../config/multer.config";
-import { USER_ROLE } from "../User/user.constant";
 import { ImageControllers } from "./image.controllers";
+// import { clerkClient } from "../../middlewares/clerkClient";
+import { requireAuth } from "@clerk/express";
 const router = express.Router();
 
 router.post(
   "/add-image",
-  auth(USER_ROLE.user, USER_ROLE.premiumUser, USER_ROLE.superAdmin),
+  requireAuth(),
   fileUploader.single("file"),
   ImageControllers.stroreImage
 );
 
-router.delete(
-  "/delete-image/:id",
-  auth(USER_ROLE.user, USER_ROLE.premiumUser, USER_ROLE.superAdmin),
-  ImageControllers.deleteImage
-);
+router.delete("/delete-image/:id", requireAuth(), ImageControllers.deleteImage);
 
-router.get(
-  "/get-all-image",
-  auth(USER_ROLE.user, USER_ROLE.premiumUser, USER_ROLE.superAdmin),
-  ImageControllers.getAllImage
-);
+router.get("/get-all-image", requireAuth(), ImageControllers.getAllImage);
 
 export const ImageRoutes = router;

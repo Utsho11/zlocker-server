@@ -4,6 +4,7 @@ import express, { Application, Request, Response } from "express";
 import globalErrorHandler from "./app/middlewares/globalErrorhandler";
 import notFound from "./app/middlewares/notFound";
 import router from "./app/routes";
+import { clerkMiddleware } from "@clerk/express";
 
 const app: Application = express();
 
@@ -14,10 +15,11 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: "https://zlocker-five.vercel.app",
-    methods: ["GET", "POST", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
+
+app.use(clerkMiddleware());
 
 // application routes
 app.use("/api", router);
