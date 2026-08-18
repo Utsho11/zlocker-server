@@ -100,6 +100,18 @@ const uploadGuestFile = async (lockerId: string, req: Request) => {
   }
 
   const cleanLockerId = lockerId.trim().toLowerCase();
+  
+  // Enforce Guest limit: max 3 files
+  const currentCount = await GuestFile.countDocuments({ lockerId: cleanLockerId });
+  if (currentCount >= 3) {
+    // Delete newly uploaded file from Cloudinary since limit exceeded
+    try {
+      await cloudinary.uploader.destroy(req.file.filename);
+      await cloudinary.uploader.destroy(req.file.filename, { resource_type: "raw" });
+    } catch {}
+    throw new AppError(403, "Guest lockers are limited to 3 files/images. Please create an account for 5 files or Pro for unlimited.");
+  }
+
   const link = req.file.path;
   const publicId = req.file.filename;
   const fileName = req.file.originalname;

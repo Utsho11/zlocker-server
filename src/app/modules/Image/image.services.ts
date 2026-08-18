@@ -20,6 +20,16 @@ const storeImageIntoDB = async (email: string, req: Request) => {
     throw new AppError(400, "Please upload a valid file!");
   }
 
+  // Enforce Free Tier limit: max 5 files
+  const currentCount = await Image.countDocuments({ email });
+  if (currentCount >= 5) {
+    try {
+      await cloudinary.uploader.destroy(req.file.filename);
+      await cloudinary.uploader.destroy(req.file.filename, { resource_type: "raw" });
+    } catch {}
+    throw new AppError(403, "Free accounts are limited to 5 files/images. Please delete existing files or upgrade to Pro for unlimited storage.");
+  }
+
   const link = req.file.path;
   const publicId = req.file.filename;
   const fileName = req.file.originalname;
