@@ -10,6 +10,7 @@ const textSchema = new Schema<IText, TextModel>(
     author: {
       type: String,
       required: true,
+      index: true,
     },
     createdAt: {
       type: Date,

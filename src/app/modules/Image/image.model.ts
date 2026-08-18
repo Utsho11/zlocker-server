@@ -6,6 +6,7 @@ const imageSchema = new Schema<IImage>(
     email: {
       type: String,
       required: true,
+      index: true,
     },
     link: {
       type: String,
