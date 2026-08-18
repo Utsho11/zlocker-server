@@ -31,7 +31,6 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^7.0.3",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.8.3",
     "zod": "^3.24.4"
   },
   "devDependencies": {
@@ -47,6 +46,7 @@
     "@typescript-eslint/parser": "^8.32.1",
     "eslint": "^9.27.0",
     "globals": "^16.1.0",
+    "typescript": "^5.8.2",
     "typescript-eslint": "^8.32.1"
   }
 }
