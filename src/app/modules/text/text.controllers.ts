@@ -32,9 +32,9 @@ const getAllContent = catchAsync(async (req, res) => {
 
 const getSingleContent = catchAsync(async (req, res) => {
   const id = req.params.id;
-  // console.log("id", req.params.id);
+  const email = await getUserEmail(req);
 
-  const result = await TextServices.getContentById(id as string);
+  const result = await TextServices.getContentById(id as string, email);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -47,9 +47,9 @@ const getSingleContent = catchAsync(async (req, res) => {
 const updateContent = catchAsync(async (req, res) => {
   const id = req.params.id;
   const { content } = req.body;
-  // console.log("id", req.params.id);
+  const email = await getUserEmail(req);
 
-  const result = await TextServices.updateContent(id as string, content);
+  const result = await TextServices.updateContent(id as string, email, content);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -61,10 +61,9 @@ const updateContent = catchAsync(async (req, res) => {
 
 const deleteContent = catchAsync(async (req, res) => {
   const id = req.params.id;
-  // console.log(id);
-  // console.log("id", req.params.id);
+  const email = await getUserEmail(req);
 
-  const result = await TextServices.deleteContent(id as string);
+  const result = await TextServices.deleteContent(id as string, email);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

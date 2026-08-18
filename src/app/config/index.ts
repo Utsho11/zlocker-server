@@ -13,4 +13,10 @@ export default {
   cloudinary_api_secret: process.env.CLOUDINARY_API_SECRET,
   clerk_secret_key: process.env.CLERK_SECRET_KEY,
   clerk_publishable_key: process.env.CLERK_PUBLISHABLE_KEY,
+  email_user: process.env.EMAIL_USER || "zlocker2025@gmail.com",
+  email_pass: process.env.EMAIL_PASS,
+  secret_key: process.env.SECRET_KEY || "default_insecure_secret_key_32_bytes_len!",
+  allowed_origins: process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+    : ["https://zlocker-five.vercel.app", "http://localhost:3000", "http://127.0.0.1:3000"],
 };

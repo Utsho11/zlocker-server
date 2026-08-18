@@ -35,58 +35,50 @@ const getAllContentFromDB = async (email: string) => {
   return result;
 };
 
-const getContentById = async (id: string) => {
-  // console.log(id);
-
+const getContentById = async (id: string, email: string) => {
   if (!id) {
-    throw new AppError(404, "ContentID is missing!");
+    throw new AppError(400, "Content ID is missing!");
   }
 
-  const data = await Text.findById(id);
-  // console.log(result);
+  const data = await Text.findOne({ _id: id, author: email });
 
-  let result;
-
-  if (data) {
-    const decryptedContent = decrypt(data.content);
-
-    result = { ...data.toObject(), content: decryptedContent };
+  if (!data) {
+    throw new AppError(404, "Content not found or unauthorized!");
   }
 
-  return result;
+  const decryptedContent = decrypt(data.content);
+  return { ...data.toObject(), content: decryptedContent };
 };
 
-const updateContent = async (id: string, content: string) => {
+const updateContent = async (id: string, email: string, content: string) => {
   if (!id) {
     throw new AppError(400, "Content ID is missing!");
   }
 
   const encryptedContent = encrypt(content);
 
-  const result = await Text.findByIdAndUpdate(
-    id,
+  const result = await Text.findOneAndUpdate(
+    { _id: id, author: email },
     { content: encryptedContent },
     { new: true } // returns the updated document
   );
 
   if (!result) {
-    throw new AppError(404, "Content not found!");
+    throw new AppError(404, "Content not found or unauthorized!");
   }
 
   return "Content Updated Successfully";
 };
 
-const deleteContent = async (id: string) => {
-  // console.log(id);
-
+const deleteContent = async (id: string, email: string) => {
   if (!id) {
     throw new AppError(400, "Content ID is missing!");
   }
 
-  const result = await Text.findByIdAndDelete(id);
+  const result = await Text.findOneAndDelete({ _id: id, author: email });
 
   if (!result) {
-    throw new AppError(404, "Content not found!");
+    throw new AppError(404, "Content not found or unauthorized!");
   }
 
   return "Content deleted successfully!";

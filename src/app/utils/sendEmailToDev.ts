@@ -13,10 +13,10 @@ export const sendEmailToDev = async ({
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
-    secure: config.NODE_ENV === "production",
+    secure: false, // port 587 uses STARTTLS, so secure must be false
     auth: {
-      user: "zlocker2025@gmail.com",
-      pass: "djis dpit gqsd rdsn", // make sure this is stored securely, e.g., in env
+      user: config.email_user,
+      pass: config.email_pass,
     },
   });
 

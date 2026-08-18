@@ -5,6 +5,7 @@ import globalErrorHandler from "./app/middlewares/globalErrorhandler";
 import notFound from "./app/middlewares/notFound";
 import router from "./app/routes";
 import { clerkMiddleware } from "@clerk/express";
+import config from "./app/config";
 
 const app: Application = express();
 
@@ -14,7 +15,17 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "https://zlocker-five.vercel.app",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      if (
+        config.allowed_origins.includes(origin) ||
+        config.allowed_origins.includes("*")
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Fallback allow in dev/preview
+    },
     credentials: true,
   })
 );

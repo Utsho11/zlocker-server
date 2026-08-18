@@ -5,11 +5,20 @@ import AppError from "../errors/AppError";
 export const getUserEmail = async (req: Request) => {
   const { userId } = getAuth(req);
 
-  const user = await clerkClient.users.getUser(userId as string);
+  if (!userId) {
+    throw new AppError(401, "Unauthorized access! Please login.");
+  }
+
+  const user = await clerkClient.users.getUser(userId);
 
   if (!user) {
     throw new AppError(404, "User not found");
   }
 
-  return user.emailAddresses[0].emailAddress;
+  const email =
+    user.emailAddresses?.[0]?.emailAddress ||
+    user.primaryEmailAddressId ||
+    userId;
+
+  return email;
 };

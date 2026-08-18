@@ -4,11 +4,11 @@ import sendResponse from "../../utils/sendResponse";
 import { AuthServices } from "./auth.service";
 
 const sendMail = catchAsync(async (req, res) => {
-  const result = AuthServices.sendMailToDev(req);
+  const result = await AuthServices.sendMailToDev(req);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Password reset succesfully!",
+    message: "Message sent successfully!",
     data: result,
   });
 });

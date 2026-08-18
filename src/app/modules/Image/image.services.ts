@@ -4,8 +4,12 @@ import { Image } from "./image.model";
 import { v2 as cloudinary } from "cloudinary";
 
 const storeImageIntoDB = async (email: string, req: Request) => {
-  const link = req.file?.path;
-  const publicId = req.file?.filename;
+  if (!req.file || !req.file.path) {
+    throw new AppError(400, "Please upload a valid image file!");
+  }
+
+  const link = req.file.path;
+  const publicId = req.file.filename;
 
   const data = {
     email,
