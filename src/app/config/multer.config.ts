@@ -8,15 +8,19 @@ const removeExtension = (filename: string) => {
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinaryUpload,
-  params: {
-    public_id: (_req, file) =>
-      Math.random().toString(36).substring(2) +
-      "-" +
-      Date.now() +
-      "-" +
-      file.fieldname +
-      "-" +
-      removeExtension(file.originalname),
+  params: async (_req, file) => {
+    const cleanName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
+    return {
+      folder: "zlocker",
+      resource_type: "auto",
+      public_id: `${Date.now()}-${removeExtension(cleanName)}`,
+    };
   },
 });
-export const fileUploader = multer({ storage: storage });
+
+export const fileUploader = multer({
+  storage: storage,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB max file size
+  },
+});

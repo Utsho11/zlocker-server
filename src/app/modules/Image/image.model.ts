@@ -1,7 +1,7 @@
 import { model, Schema } from "mongoose";
 import { IImage } from "./image.interface";
 
-const textSchema = new Schema<IImage>(
+const imageSchema = new Schema<IImage>(
   {
     email: {
       type: String,
@@ -15,10 +15,24 @@ const textSchema = new Schema<IImage>(
       type: String,
       required: true,
     },
+    fileName: {
+      type: String,
+    },
+    fileType: {
+      type: String,
+      default: "raw",
+    },
+    fileSize: {
+      type: Number,
+    },
+    resourceType: {
+      type: String,
+      default: "auto",
+    },
   },
   {
     timestamps: true,
   }
 );
 
-export const Image = model<IImage>("Image", textSchema);
+export const Image = model<IImage>("Image", imageSchema);
