@@ -2,6 +2,7 @@ import { Router } from "express";
 import { AuthRoutes } from "../modules/Auth/auth.route";
 import { TextRoutes } from "../modules/text/text.routes";
 import { ImageRoutes } from "../modules/Image/image.routes";
+import { GuestRoutes } from "../modules/Guest/guest.routes";
 
 const router = Router();
 
@@ -17,6 +18,10 @@ const moduleRoutes = [
   {
     path: "/image",
     route: ImageRoutes,
+  },
+  {
+    path: "/guest",
+    route: GuestRoutes,
   },
 ];
 

@@ -2,11 +2,21 @@ import { Server } from "http";
 import app, { connectDB } from "./app";
 import config from "./app/config";
 
+import { GuestServices } from "./app/modules/Guest/guest.services";
+
 let server: Server;
 
 async function main() {
   try {
     await connectDB();
+
+    // Run initial cleanup of expired guest files
+    GuestServices.cleanupExpiredGuestData().catch(console.error);
+
+    // Schedule hourly cleanup
+    setInterval(() => {
+      GuestServices.cleanupExpiredGuestData().catch(console.error);
+    }, 60 * 60 * 1000);
 
     const port = Number(config.port) || 5000;
     server = app.listen(port, "0.0.0.0", () => {
