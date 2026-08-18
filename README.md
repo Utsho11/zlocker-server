@@ -79,7 +79,7 @@ CLOUDINARY_API_SECRET=your_api_secret
 SECRET_KEY=your_32_byte_aes_secret_key
 EMAIL_USER=your_email@gmail.com
 EMAIL_PASS=your_gmail_app_password
-ALLOWED_ORIGINS=http://localhost:3000,https://zlocker-kappa.vercel.app
+ALLOWED_ORIGINS=https://your-frontend.vercel.app,https://zlocker.app
 ```
 
 ### Installation

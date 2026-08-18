@@ -18,5 +18,5 @@ export default {
   secret_key: process.env.SECRET_KEY || "default_insecure_secret_key_32_bytes_len!",
   allowed_origins: process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-    : ["https://zlocker-five.vercel.app", "http://localhost:3000", "http://127.0.0.1:3000"],
+    : ["*"],
 };
